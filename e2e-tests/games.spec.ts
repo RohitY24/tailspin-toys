@@ -24,6 +24,40 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should display star ratings or "No rating yet" on game cards', async ({ page }) => {
+    await test.step('Navigate to homepage', async () => {
+      await page.goto('/');
+    });
+
+    await test.step('Verify games grid is visible', async () => {
+      const gamesGrid = page.getByTestId('games-grid');
+      await expect(gamesGrid).toBeVisible();
+    });
+
+    await test.step('Verify each game card has a rating or "No rating yet" badge', async () => {
+      const gameCards = page.getByTestId('game-card');
+      const cardCount = await gameCards.count();
+      expect(cardCount).toBeGreaterThan(0);
+
+      for (let i = 0; i < cardCount; i++) {
+        const card = gameCards.nth(i);
+        const hasRating = await card.getByTestId('game-star-rating').isVisible().catch(() => false);
+        const hasNoRating = await card.getByTestId('game-no-rating').isVisible().catch(() => false);
+        expect(hasRating || hasNoRating).toBeTruthy();
+      }
+    });
+
+    await test.step('Verify ratings display as numeric values', async () => {
+      const ratings = page.getByTestId('game-star-rating');
+      const ratingCount = await ratings.count();
+      
+      if (ratingCount > 0) {
+        const firstRatingText = await ratings.first().textContent();
+        expect(firstRatingText).toMatch(/^\d+\.\d+\s+out of 5$/);
+      }
+    });
+  });
+
   test('should navigate to correct game details page when clicking on a game', async ({ page }) => {
     let gameId: string | null;
     let gameTitle: string | null;
